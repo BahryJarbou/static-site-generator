@@ -12,8 +12,10 @@ class testLeafNode(TestCase):
         leaf = LeafNode("a", "google", {"href": "https://www.google.com"})
         leaf.to_html()
     
-    
-
+    def test_to_html3(self):
+        leaf = LeafNode("a", "google", {"href": "https://www.google.com"}).to_html()
+        leaf2 = LeafNode("a", "google", {"href": "https://www.google.com"}).to_html()
+        self.assertEqual(leaf, leaf2)
 
 
 if __name__ == "__main__":

@@ -12,17 +12,17 @@ def text_node_to_html_node(text_node):
     # if isinstance(text_node.text_type,TextType):
     #     raise Exception("Not a valid text type")
     match text_node.text_type:
-        case "Normal text":
+        case TextType.NORMAL_TEXT:
             return LeafNode(value = text_node.text)
-        case "Bold text":
+        case TextType.BOLD_TEXT:
             return LeafNode("b", text_node.text)
-        case "Italic text":
+        case TextType.ITALIC_TEXT:
             return LeafNode("i", text_node.text)
-        case "Code text":
+        case TextType.CODE_TEXT:
             return LeafNode("code", text_node.text)
-        case "Link":
+        case TextType.LINK:
             return LeafNode("a", text_node.text, {"href": text_node.url})
-        case "Image":
+        case TextType.IMAGE:
             return LeafNode("img", "", {"src":text_node.url,
                                         "alt": text_node.text})
         case _:
