@@ -19,17 +19,65 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
 
 def extract_markdown_images(text):
-    alt_texts = re.findall(r"\[(.*?)\]",text)
-    urls = re.findall(r"\((.*?)\)",text)
-    results = list(zip(alt_texts,urls))
-    return results
-
+    images = re.findall(r"!\[(.*?)\]\((.*?)\)",text)
+    return images
 
 
 def extract_markdown_links(text):
-    anchor_texts = re.findall(r"\[(.*?)\]",text)
-    urls = re.findall(r"\((.*?)\)",text)
-    results = list(zip(anchor_texts,urls))
-    return results
+    links = re.findall(r"(?<!!)\[(.*?)\]\((.*?)\)",text)
+    return links
 
-print(extract_markdown_links("![](https://www.github.com) and ![steam](https://www.steampowered.com)"))
+
+
+def split_nodes_image(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        current_text = node.text
+        images = extract_markdown_images(node.text)
+        if images == []:
+            new_nodes.append(node)
+        else:
+            result = []
+            for i,image in enumerate(images):
+                pretext = current_text.split(f"![{image[0]}]({image[1]})",1)[0]
+                if pretext !="":
+                    result.append(TextNode(pretext,TextType.NORMAL_TEXT))
+                result.append(TextNode(image[0],TextType.LINK, image[1]))
+                if i !=len(images)-1:
+                    current_text = current_text.split(f"![{image[0]}]({image[1]})",1)[1]
+                elif current_text.split(f"[{image[0]}]({image[1]})",1)[1] != "":
+                    result.append(TextNode(current_text.split(f"[{image[0]}]({image[1]})",1)[1],TextType.NORMAL_TEXT))
+            new_nodes.extend(result)
+    return new_nodes
+
+
+def split_nodes_link(old_nodes):
+    new_nodes = []
+    for node in old_nodes:
+        current_text = node.text
+        links = extract_markdown_links(node.text)
+        if links == []:
+            new_nodes.append(node)
+        else:
+            result = []
+            for i, link in enumerate(links):    
+                pretext = current_text.split(f"[{link[0]}]({link[1]})",1)[0]
+                if pretext !="":
+                    result.append(TextNode(pretext,TextType.NORMAL_TEXT))
+                result.append(TextNode(link[0],TextType.LINK, link[1]))
+                if i != len(links)-1:
+                    current_text = current_text.split(f"[{link[0]}]({link[1]})",1)[1]
+                elif current_text.split(f"[{link[0]}]({link[1]})",1)[1] != "":
+                    result.append(TextNode(current_text.split(f"[{link[0]}]({link[1]})",1)[1],TextType.NORMAL_TEXT))
+            new_nodes.extend(result)
+    return new_nodes
+
+
+
+# node = TextNode(
+#     "This is text with a ![imgur](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg) and some more",
+#     TextType.NORMAL_TEXT,
+# )
+# new_nodes = split_nodes_link([node])
+
+# print(new_nodes)

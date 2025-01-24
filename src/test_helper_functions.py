@@ -31,5 +31,32 @@ class TestDelimiter(unittest.TestCase):
     def test_6(self):
         text = "![](https://www.github.com) and ![steam](https://www.steampowered.com)"
         extract_markdown_links(text)
+
+    def test_7(self):
+        text = "!(https://www.github.com) and ![steam](https://www.steampowered.com)"
+        extract_markdown_links(text)
+
+    def test_8(self):
+        text = "(https://www.github.com) and ![steam](https://www.steampowered.com)"
+        extract_markdown_links(text)
+    
+    def test_9(self):
+        node = TextNode("![github](https://www.github.com) and ![steam](https://www.steampowered.com)",TextType.NORMAL_TEXT)
+        split_nodes_image([node])
+
+    def test_10(self):
+        node = TextNode("!(https://www.github.com) and ![steam](https://www.steampowered.com)",TextType.NORMAL_TEXT)
+        split_nodes_image([node])
+
+    def test_11(self):
+        node = TextNode("[github](https://www.github.com) and [steam](https://www.steampowered.com)",TextType.NORMAL_TEXT)
+        split_nodes_link([node])
+    
+    def test_12(self):
+        node = TextNode("(https://www.github.com) and [steam](https://www.steampowered.com)",TextType.NORMAL_TEXT)
+        split_nodes_link([node])
+        
+        
+        
 if __name__ == "__main__":
     unittest.main()
