@@ -42,7 +42,7 @@ def split_nodes_image(old_nodes):
                 pretext = current_text.split(f"![{image[0]}]({image[1]})",1)[0]
                 if pretext !="":
                     result.append(TextNode(pretext,TextType.NORMAL_TEXT))
-                result.append(TextNode(image[0],TextType.LINK, image[1]))
+                result.append(TextNode(image[0],TextType.IMAGE, image[1]))
                 if i !=len(images)-1:
                     current_text = current_text.split(f"![{image[0]}]({image[1]})",1)[1]
                 elif current_text.split(f"[{image[0]}]({image[1]})",1)[1] != "":
@@ -72,12 +72,30 @@ def split_nodes_link(old_nodes):
             new_nodes.extend(result)
     return new_nodes
 
+def text_to_textnodes(nodes):
+    delimiters = ["**", "*", "`"]
+    text_types = {
+        "**": TextType.BOLD_TEXT,
+        "*": TextType.ITALIC_TEXT,
+        "`": TextType.CODE_TEXT
+    }
+    for delimiter in delimiters:
+       nodes = split_nodes_delimiter(nodes, delimiter=delimiter,text_type=text_types[delimiter])
+    
+    nodes = split_nodes_image(nodes)
+    nodes = split_nodes_link(nodes)
+    
+    return nodes
 
 
-# node = TextNode(
-#     "This is text with a ![imgur](https://i.imgur.com/aKaOqIh.gif) and [obi wan](https://i.imgur.com/fJRm4Vk.jpeg) and some more",
-#     TextType.NORMAL_TEXT,
-# )
-# new_nodes = split_nodes_link([node])
 
-# print(new_nodes)
+
+
+node = TextNode(
+    "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)",
+    TextType.NORMAL_TEXT,
+)
+new_nodes = text_to_textnodes([node])
+
+for node in new_nodes:
+    print(node)
