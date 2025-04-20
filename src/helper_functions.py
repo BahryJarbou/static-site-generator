@@ -1,5 +1,19 @@
 from textnode import *
+from htmlnode import *
 import re
+from enum import Enum
+from itertools import pairwise
+from main import text_node_to_html_node
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    UNORDERED_LIST = "unordered_list"
+    ORDERED_LIST = "ordered_list"
+
+
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
     for node in old_nodes:
@@ -72,11 +86,12 @@ def split_nodes_link(old_nodes):
             new_nodes.extend(result)
     return new_nodes
 
-def text_to_textnodes(nodes):
-    delimiters = ["**", "*", "`"]
+def text_to_textnodes(text):
+    nodes = [TextNode(text, TextType.NORMAL_TEXT)]
+    delimiters = ["**", "_", "`"]
     text_types = {
         "**": TextType.BOLD_TEXT,
-        "*": TextType.ITALIC_TEXT,
+        "_": TextType.ITALIC_TEXT,
         "`": TextType.CODE_TEXT
     }
     for delimiter in delimiters:
@@ -89,13 +104,74 @@ def text_to_textnodes(nodes):
 
 
 
+def markdown_to_blocks(markdown):
+    blocks = markdown.split("\n\n")
+    blocks = list(map(str.strip, blocks))
+    blocks = list(filter(lambda x: x!="",blocks))
+    return blocks
 
 
-node = TextNode(
-    "This is **text** with an *italic* word and a `code block` and an ![obi wan image](https://i.imgur.com/fJRm4Vk.jpeg) and a [link](https://boot.dev)",
-    TextType.NORMAL_TEXT,
-)
-new_nodes = text_to_textnodes([node])
+def block_to_block_type(markdown):
+    if re.match(r"#{1,6} ",markdown) != None:
+        return BlockType.HEADING
+    elif re.match(r"```((?s:.)*?)```",markdown):
+        return BlockType.CODE
+    elif re.match(r"(>(.*?))",markdown) and len(re.findall(r"(>(.*?))",markdown)) == len(markdown.split("\n")):
+        return BlockType.QUOTE
+    elif re.match(r"(>(.*?))",markdown) and len(re.findall(r"(>(.*?))",markdown)) == len(markdown.split("\n")):
+        return BlockType.QUOTE
+    elif re.match(r"(- (.*?))",markdown) and len(re.findall(r"(- (.*?))",markdown)) == len(markdown.split("\n")):
+        return BlockType.UNORDERED_LIST
+    elif re.match(r"(1\. (.*?))",markdown) and len(re.findall(r"([0-9]+\. (.*?))",markdown)) == len(markdown.split("\n")) and all(int(x) == int(y) - 1 for x,y in pairwise(re.findall(r"[0-9]+",markdown))):
+        return BlockType.ORDERED_LIST
+    else:
+        return BlockType.PARAGRAPH
 
-for node in new_nodes:
-    print(node)
+
+def text_to_children(text):
+    html_nodes = []
+    text_nodes = text_to_textnodes(text)
+    # print(text_nodes)
+    for text_node in text_nodes:
+        html_nodes.append(text_node_to_html_node(text_node))
+    return html_nodes
+
+md = """
+This is **bolded** paragraph
+text in a p
+tag here
+
+This is another paragraph with _italic_ text and `code` here
+
+"""
+
+def markdown_to_html_node(markdown):
+    nodes = []
+    blocks = markdown_to_blocks(markdown)
+    for block in blocks:
+        block_type = block_to_block_type(block)
+        match block_type:
+            case BlockType.PARAGRAPH:
+                block_nodes = text_to_children(block)
+                nodes.append(ParentNode("p",block_nodes))
+            case BlockType.HEADING:
+                heading_size = len(re.match(r"#*",block).group(0))
+                block_nodes = text_to_children(block)
+                nodes.append(ParentNode(f"h{heading_size}",block_nodes))
+            case BlockType.QUOTE:
+                block_nodes = text_to_children(block)
+                nodes.append(ParentNode("q",block_nodes))
+            case BlockType.ORDERED_LIST:
+                list_items = list(filter(lambda y: y !="",[x.strip("\n") for x in re.split(r"\d\. ",block)]))
+                list_items_inlines = list(map(text_to_children,list_items))
+                list_items_html = [ParentNode("li",x) for x in list_items_inlines]
+                nodes.append(ParentNode("ol",list_items_html))
+            case BlockType.UNORDERED_LIST:
+                list_items = list(filter(lambda y: y !="",[x.strip("\n") for x in block.split("- ")]))
+                list_items_inlines = list(map(text_to_children,list_items))
+                list_items_html = [ParentNode("li",x) for x in list_items_inlines]
+                nodes.append(ParentNode("ul",list_items_html))
+            case BlockType.CODE:
+                code_node = TextNode(block.strip("```").lstrip("\n"), TextType.CODE_TEXT)
+                nodes.append(ParentNode("pre",[text_node_to_html_node(code_node)]))
+    return ParentNode("div",nodes)
