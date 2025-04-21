@@ -68,7 +68,7 @@ def generate_page(from_path, template_path, dest_path, basepath):
         os.makedirs(dest_path)
     
     with open(os.path.join(dest_path, "index.html"), "w") as html_file:
-        html_file.write(template_with_title_and_content)
+        html_file.write(template_with_title_and_content_and_basepath2)
         html_file.close()
         
 
@@ -84,10 +84,3 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
             new_dest_dir_path = os.path.join(dest_dir_path,dir)
             print("current dest", new_dest_dir_path)
             generate_pages_recursive(file_path,template_path, new_dest_dir_path,basepath)
-
-
-
-
-
-
-generate_pages_recursive("./content/","template.html","./public/")
