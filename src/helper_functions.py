@@ -3,7 +3,6 @@ from htmlnode import *
 import re
 from enum import Enum
 from itertools import pairwise
-from main import text_node_to_html_node
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -13,6 +12,26 @@ class BlockType(Enum):
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
 
+
+def text_node_to_html_node(text_node):
+    # if isinstance(text_node.text_type,TextType):
+    #     raise Exception("Not a valid text type")
+    match text_node.text_type:
+        case TextType.NORMAL_TEXT:
+            return LeafNode(None, value = text_node.text)
+        case TextType.BOLD_TEXT:
+            return LeafNode("b", text_node.text)
+        case TextType.ITALIC_TEXT:
+            return LeafNode("i", text_node.text)
+        case TextType.CODE_TEXT:
+            return LeafNode("code", text_node.text)
+        case TextType.LINK:
+            return LeafNode("a", text_node.text, {"href": text_node.url})
+        case TextType.IMAGE:
+            return LeafNode("img", "", {"src":text_node.url,
+                                        "alt": text_node.text})
+        case _:
+             raise Exception("Not a valid text type")
 
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
     new_nodes = []
@@ -118,8 +137,6 @@ def block_to_block_type(markdown):
         return BlockType.CODE
     elif re.match(r"(>(.*?))",markdown) and len(re.findall(r"(>(.*?))",markdown)) == len(markdown.split("\n")):
         return BlockType.QUOTE
-    elif re.match(r"(>(.*?))",markdown) and len(re.findall(r"(>(.*?))",markdown)) == len(markdown.split("\n")):
-        return BlockType.QUOTE
     elif re.match(r"(- (.*?))",markdown) and len(re.findall(r"(- (.*?))",markdown)) == len(markdown.split("\n")):
         return BlockType.UNORDERED_LIST
     elif re.match(r"(1\. (.*?))",markdown) and len(re.findall(r"([0-9]+\. (.*?))",markdown)) == len(markdown.split("\n")) and all(int(x) == int(y) - 1 for x,y in pairwise(re.findall(r"[0-9]+",markdown))):
@@ -156,11 +173,12 @@ def markdown_to_html_node(markdown):
                 nodes.append(ParentNode("p",block_nodes))
             case BlockType.HEADING:
                 heading_size = len(re.match(r"#*",block).group(0))
-                block_nodes = text_to_children(block)
+                block_nodes = text_to_children(block.strip(r"#* "))
                 nodes.append(ParentNode(f"h{heading_size}",block_nodes))
             case BlockType.QUOTE:
-                block_nodes = text_to_children(block)
-                nodes.append(ParentNode("q",block_nodes))
+                cleaned_block = block.replace("> ", "").replace(">","")
+                block_nodes = text_to_children(cleaned_block)
+                nodes.append(ParentNode("blockquote",block_nodes))
             case BlockType.ORDERED_LIST:
                 list_items = list(filter(lambda y: y !="",[x.strip("\n") for x in re.split(r"\d\. ",block)]))
                 list_items_inlines = list(map(text_to_children,list_items))

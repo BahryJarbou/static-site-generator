@@ -7,7 +7,7 @@ from helper_functions import *
 class TestDelimiter(unittest.TestCase):
     
     
-    def test_(self):
+    def test_1(self):
         node = TextNode("**This** is text with a `code block` word", TextType.NORMAL_TEXT)
         split_nodes_delimiter(split_nodes_delimiter([node], "`", TextType.CODE_TEXT),"**", TextType.BOLD_TEXT)
         
@@ -179,6 +179,20 @@ the **same** even with inline stuff
         "<div><pre><code>This is text that _should_ remain\nthe **same** even with inline stuff\n</code></pre></div>",
     )
 
+
+    def test_blockquote(self):
+        md = """
+> "I am in fact a Hobbit in all but size."
+>
+> -- J.R.R. Tolkien
+        """
+        node = markdown_to_html_node(md)
+        html = node.to_html()
+        print(html)
+        self.assertEqual(
+        html,
+        "<div><blockquote>\"I am in fact a Hobbit in all but size.\"\n\n-- J.R.R. Tolkien</blockquote></div>"
+                         )
 
     def test_unordered_list(self):
         md = """
