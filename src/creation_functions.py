@@ -77,16 +77,9 @@ def generate_pages_recursive(dir_path_content, template_path, dest_dir_path, bas
     dirs = os.listdir(dir_path_content)
     for dir in dirs:
         file_path = os.path.join(dir_path_content,dir)
-        # print(file_path)
         if os.path.isfile(file_path):
             generate_page(file_path, template_path, dest_dir_path,basepath)
         else:
             new_dest_dir_path = os.path.join(dest_dir_path,dir)
             print("current dest", new_dest_dir_path)
             generate_pages_recursive(file_path,template_path, new_dest_dir_path,basepath)
-
-
-
-
-
-print(os.path.exists("docs"))

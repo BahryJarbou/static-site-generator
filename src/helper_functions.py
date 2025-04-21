@@ -14,8 +14,6 @@ class BlockType(Enum):
 
 
 def text_node_to_html_node(text_node):
-    # if isinstance(text_node.text_type,TextType):
-    #     raise Exception("Not a valid text type")
     match text_node.text_type:
         case TextType.NORMAL_TEXT:
             return LeafNode(None, value = text_node.text)
@@ -148,7 +146,6 @@ def block_to_block_type(markdown):
 def text_to_children(text):
     html_nodes = []
     text_nodes = text_to_textnodes(text)
-    # print(text_nodes)
     for text_node in text_nodes:
         html_nodes.append(text_node_to_html_node(text_node))
     return html_nodes
