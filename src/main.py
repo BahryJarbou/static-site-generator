@@ -9,8 +9,8 @@ def main():
         basepath ="/"
     print(basepath)
     # print("base path:",basepath[0])
-    copy_content("./static/","./docs/")
-    generate_pages_recursive("./content/","template.html","./docs/",basepath)
+    copy_content("static","docs")
+    generate_pages_recursive("content","template.html","docs",basepath)
     
 
 main()
